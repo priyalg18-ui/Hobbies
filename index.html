@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SwingTrade AI - Indian Markets Swing Trading Dashboard</title>
+    <!-- CSS styling -->
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="app-container" id="appContainer">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                <div class="logo-icon">S</div>
+                <h1 class="logo-text">SwingTrade<span>AI</span></h1>
+            </div>
+            
+            <nav style="flex-grow: 1;">
+                <ul class="nav-menu">
+                    <li class="nav-item active" data-screen="screen-dashboard">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </li>
+                    <li class="nav-item" data-screen="screen-weekly">
+                        <i class="fa-solid fa-calendar-week"></i>
+                        <span>Weekly Picks</span>
+                    </li>
+                    <li class="nav-item" data-screen="screen-monthly">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <span>Monthly Picks</span>
+                    </li>
+                    <li class="nav-item" data-screen="screen-chart">
+                        <i class="fa-solid fa-chart-area"></i>
+                        <span>Chart Terminal</span>
+                    </li>
+                    <li class="nav-item" data-screen="screen-portfolio">
+                        <i class="fa-solid fa-briefcase"></i>
+                        <span>Portfolio & Watchlist</span>
+                    </li>
+                    <li class="nav-item" data-screen="screen-chatbot">
+                        <i class="fa-solid fa-robot"></i>
+                        <span>AI Assistant</span>
+                    </li>
+                    <li class="nav-item" data-screen="screen-alerts">
+                        <i class="fa-solid fa-bell"></i>
+                        <span>Alert Center</span>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="btn-simulator" id="toggleSimulator">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>Mobile Simulator</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Top bar -->
+            <header class="top-header">
+                <!-- Market Index Tickers -->
+                <div class="market-ticker" id="marketTicker">
+                    <div class="ticker-item">
+                        <span class="ticker-name">NIFTY 50</span>
+                        <span class="ticker-val" id="ticker-nifty">23,416.55</span>
+                        <span class="ticker-pct bullish" id="pct-nifty">+0.82%</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-name">SENSEX</span>
+                        <span class="ticker-val" id="ticker-sensex">74,360.01</span>
+                        <span class="ticker-pct bearish" id="pct-sensex">-0.68%</span>
+                    </div>
+                    <div class="ticker-item">
+                        <span class="ticker-name">NIFTY BANK</span>
+                        <span class="ticker-val" id="ticker-niftybank">54,307.85</span>
+                        <span class="ticker-pct bullish" id="pct-niftybank">+1.12%</span>
+                    </div>
+                </div>
+
+                <!-- Live Connection Badge -->
+                <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--text-secondary); background:rgba(0,230,118,0.06); padding:6px 12px; border-radius:20px; border:1px solid rgba(0,230,118,0.2); margin-left:auto; margin-right:16px;" id="connectionStatus">
+                    <span style="width:8px; height:8px; background:var(--accent-green); border-radius:50%; display:inline-block; box-shadow:0 0 8px var(--accent-green);" id="connectionStatusDot"></span>
+                    <span id="connectionStatusText">Live Market Connected</span>
+                </div>
+
+                <!-- Global Search/Query Input -->
+                <div class="search-wrapper">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" class="search-input" id="globalSearch" placeholder="Search stock or type query (e.g. under ₹500)...">
+                </div>
+            </header>
+
+            <!-- Screens Container -->
+            <div class="content-screens">
+                
+                <!-- 1. DASHBOARD SCREEN -->
+                <div class="screen active" id="screen-dashboard">
+                    <div class="dashboard-grid">
+                        <div class="stats-card glass-panel">
+                            <div class="stats-title">Active Watchlist</div>
+                            <div class="stats-val" id="dash-watchlist-count">0</div>
+                            <div class="stats-desc">Stocks tracked for setups</div>
+                        </div>
+                        <div class="stats-card glass-panel green">
+                            <div class="stats-title">Open Positions P&L</div>
+                            <div class="stats-val" id="dash-portfolio-pl">₹0.00</div>
+                            <div class="stats-desc" id="dash-portfolio-pct">0.00% Net Profit</div>
+                        </div>
+                        <div class="stats-card glass-panel purple">
+                            <div class="stats-title">Win Rate</div>
+                            <div class="stats-val" id="dash-winrate">0%</div>
+                            <div class="stats-desc" id="dash-closed-trades">0 trades closed</div>
+                        </div>
+                        <div class="stats-card glass-panel orange">
+                            <div class="stats-title">Highest Swing Score</div>
+                            <div class="stats-val" id="dash-highest-score">--</div>
+                            <div class="stats-desc" id="dash-highest-ticker">No stocks loaded</div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <!-- Sector Strengths -->
+                        <div class="glass-panel grid-col-4" style="padding: 20px;">
+                            <div class="section-header" style="margin-bottom: 12px;">
+                                <h3 class="section-title"><i class="fa-solid fa-chart-pie"></i>Sector Heatmap</h3>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 12px;" id="sectorList">
+                                <!-- Sector items injected by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- Top 5 Candidate List Overview -->
+                        <div class="glass-panel grid-col-8" style="padding: 20px;">
+                            <div class="section-header">
+                                <h3 class="section-title"><i class="fa-solid fa-trophy"></i>Top Rated Swing Setups (&gt;75 Score)</h3>
+                                <span style="font-size: 12px; color: var(--text-secondary);">Updated Daily</span>
+                            </div>
+                            <div class="portfolio-table-container">
+                                <table class="trading-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Ticker</th>
+                                            <th>Name</th>
+                                            <th>Price</th>
+                                            <th>Change</th>
+                                            <th>Swing Score</th>
+                                            <th>Risk/Reward</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="topRatedTableBody">
+                                        <!-- Injected by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. WEEKLY PICKS SCREEN -->
+                <div class="screen" id="screen-weekly">
+                    <div class="section-header" style="margin-bottom: 24px;">
+                        <div>
+                            <h2 class="section-title" style="font-size: 24px;"><i class="fa-solid fa-calendar-week"></i>Top 5 Swing Trades - Weekly</h2>
+                            <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">Ranked swing candidates optimized for the next 5-10 trading days.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recs-container" id="weeklyRecommendationsList">
+                        <!-- Card lists generated by JS -->
+                    </div>
+
+                    <div class="risk-disclaimer">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span><strong>Risk Disclaimer:</strong> This is an AI-generated swing trading analysis and not investment advice. Markets involve risk. Conduct your own research before investing.</span>
+                    </div>
+                </div>
+
+                <!-- 3. MONTHLY PICKS SCREEN -->
+                <div class="screen" id="screen-monthly">
+                    <div class="section-header" style="margin-bottom: 24px;">
+                        <div>
+                            <h2 class="section-title" style="font-size: 24px;"><i class="fa-solid fa-calendar-days"></i>Top 5 Swing Trades - Monthly</h2>
+                            <p style="color: var(--text-secondary); font-size: 14px; margin-top: 4px;">Ranked swing candidates optimized for the next 20-30 trading days.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recs-container" id="monthlyRecommendationsList">
+                        <!-- Card lists generated by JS -->
+                    </div>
+
+                    <div class="risk-disclaimer">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span><strong>Risk Disclaimer:</strong> This is an AI-generated swing trading analysis and not investment advice. Markets involve risk. Conduct your own research before investing.</span>
+                    </div>
+                </div>
+
+                <!-- 4. CHART TERMINAL SCREEN -->
+                <div class="screen" id="screen-chart">
+                    <div class="chart-container-split">
+                        
+                        <!-- Left Chart Panel -->
+                        <div class="chart-panel-main glass-panel">
+                            <div class="chart-header-actions">
+                                <div class="stock-selector-container">
+                                    <h3 style="font-size: 16px; font-weight: 700; color: #ffffff;"><i class="fa-solid fa-chart-area" style="color:var(--accent-blue); margin-right:8px;"></i>Chart Analysis:</h3>
+                                    <select class="select-stock-dropdown" id="chartStockSelect">
+                                        <!-- Stock options loaded dynamically -->
+                                    </select>
+                                </div>
+                                <div id="chartPriceLabel" style="font-weight: 700; font-size: 15px;">
+                                    <!-- Dynamic price tag -->
+                                </div>
+                            </div>
+                            
+                            <!-- Legend for indicators details -->
+                            <div id="chartLegend" style="background: rgba(0,0,0,0.15); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px;">
+                                <!-- Live indicator tooltips -->
+                            </div>
+                            
+                            <!-- Canvas Element -->
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="stockCanvas"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Right Detail Panel -->
+                        <div class="chart-details-sidebar glass-panel">
+                            <h3 class="section-title"><i class="fa-solid fa-robot"></i>AI Analysis & Explanation</h3>
+                            
+                            <div class="chart-explanation-text" id="chartExplanationBox">
+                                <!-- Injected explanation corresponding to selected stock and markings -->
+                            </div>
+                            
+                            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+
+                            <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-gauge"></i>Technical Indicators</h3>
+                            <div class="technical-grid">
+                                <div class="tech-item">
+                                    <div style="font-size: 11px; color: var(--text-muted);">RSI (14)</div>
+                                    <div class="val" id="tech-rsi-val">--</div>
+                                </div>
+                                <div class="tech-item">
+                                    <div style="font-size: 11px; color: var(--text-muted);">MACD Trend</div>
+                                    <div class="val" id="tech-macd-val">--</div>
+                                </div>
+                                <div class="tech-item">
+                                    <div style="font-size: 11px; color: var(--text-muted);">Vs 20/50 DMA</div>
+                                    <div class="val" id="tech-dma-val">--</div>
+                                </div>
+                                <div class="tech-item">
+                                    <div style="font-size: 11px; color: var(--text-muted);">Volume Surge</div>
+                                    <div class="val" id="tech-volume-val">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. PORTFOLIO & WATCHLIST SCREEN -->
+                <div class="screen" id="screen-portfolio">
+                    <!-- Portfolio cards metrics -->
+                    <div class="portfolio-header">
+                        <div class="stats-card glass-panel">
+                            <div class="stats-title">Watchlist Count</div>
+                            <div class="stats-val" id="port-watchlist-count">0</div>
+                            <div class="stats-desc">Monitored candidates</div>
+                        </div>
+                        <div class="stats-card glass-panel green" id="port-pl-card">
+                            <div class="stats-title">Current Returns</div>
+                            <div class="stats-val" id="port-total-pl">₹0.00</div>
+                            <div class="stats-desc" id="port-total-pct">0.00% P&L</div>
+                        </div>
+                        <div class="stats-card glass-panel purple">
+                            <div class="stats-title">Win rate Analytics</div>
+                            <div class="stats-val" id="port-winrate">0%</div>
+                            <div class="stats-desc" id="port-total-trades">0 trades closed</div>
+                        </div>
+                        <div class="stats-card glass-panel" style="display:flex; flex-direction:column; justify-content:center; align-items:center; padding:12px;">
+                            <button class="btn-primary" id="btnOpenAddPosition" style="width:100%; height:44px;"><i class="fa-solid fa-plus" style="margin-right:8px;"></i>Record Swing Entry</button>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <!-- Positions Table -->
+                        <div class="glass-panel grid-col-8" style="padding: 20px;">
+                            <div class="section-header">
+                                <h3 class="section-title"><i class="fa-solid fa-folder-open"></i>Open Swing Positions</h3>
+                            </div>
+                            <div class="portfolio-table-container">
+                                <table class="trading-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Stock</th>
+                                            <th>Qty</th>
+                                            <th>Entry Price</th>
+                                            <th>Current Price</th>
+                                            <th>Target 1</th>
+                                            <th>Stop Loss</th>
+                                            <th>Returns</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="openPositionsTableBody">
+                                        <!-- Injected dynamically by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Watchlist View -->
+                        <div class="glass-panel grid-col-4" style="padding: 20px;">
+                            <div class="section-header">
+                                <h3 class="section-title"><i class="fa-solid fa-star" style="color:var(--accent-orange);"></i>Watchlist</h3>
+                            </div>
+                            <div class="portfolio-table-container" style="max-height: 280px; overflow-y: auto;">
+                                <table class="trading-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Stock</th>
+                                            <th>Price</th>
+                                            <th>Change</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="watchlistTableBody">
+                                        <!-- Injected dynamically by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Past Closed Trades -->
+                    <div class="glass-panel" style="padding: 20px; margin-top: 24px;">
+                        <div class="section-header">
+                            <h3 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i>Completed Swing Trades History</h3>
+                        </div>
+                        <div class="portfolio-table-container">
+                            <table class="trading-table">
+                                <thead>
+                                    <tr>
+                                        <th>Stock</th>
+                                        <th>Qty</th>
+                                        <th>Entry Price</th>
+                                        <th>Exit Price</th>
+                                        <th>P&L</th>
+                                        <th>Status</th>
+                                        <th>Holding Days</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="closedTradesTableBody">
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; color: var(--text-muted);">No closed trades recorded yet.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. AI CHATBOT SCREEN -->
+                <div class="screen" id="screen-chatbot">
+                    <div class="chat-container">
+                        <div class="chat-history glass-panel" id="chatHistoryBox">
+                            <!-- Welcome bubble -->
+                            <div class="chat-bubble assistant">
+                                <strong>Hello! I am your SwingTrade AI Assistant.</strong><br><br>
+                                I scan technical indicators, volume spikes, moving averages, support and resistance zones, relative strength indices, and catalysts to identify prime swing set-ups in the stock market.<br><br>
+                                What stock are you tracking, or how can I assist you? Select from the quick queries below or type your custom question.
+                            </div>
+                        </div>
+
+                        <!-- Suggestions Row -->
+                        <div class="query-chips-row" id="queryChips">
+                            <div class="query-chip" data-query="Best stocks for next week">Best stocks for next week</div>
+                            <div class="query-chip" data-query="Best stocks for next month">Best stocks for next month</div>
+                            <div class="query-chip" data-query="Swing trades under ₹500">Trades under ₹500</div>
+                            <div class="query-chip" data-query="High volume breakout stocks">Volume breakouts</div>
+                            <div class="query-chip" data-query="Stocks near support">Near support</div>
+                            <div class="query-chip" data-query="Stocks with bullish MACD crossover">MACD crossovers</div>
+                            <div class="query-chip" data-query="Best IT sector swing trades">Best IT stocks</div>
+                            <div class="query-chip" data-query="Best banking swing trades">Best banking stocks</div>
+                            <div class="query-chip" data-query="Low-risk swing trades">Low risk trades</div>
+                        </div>
+
+                        <!-- Chat Input bar -->
+                        <div class="chat-input-row">
+                            <input type="text" class="chat-input-box" id="chatInput" placeholder="Ask AI: e.g. Show breakout stocks or details of RELIANCE...">
+                            <button class="btn-send" id="btnChatSend"><i class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. ALERTS SCREEN -->
+                <div class="screen" id="screen-alerts">
+                    <div class="alerts-screen-layout">
+                        
+                        <!-- Left timeline of notifications -->
+                        <div class="glass-panel" style="padding: 20px;">
+                            <div class="section-header">
+                                <h3 class="section-title"><i class="fa-solid fa-bell"></i>Recent Swing Alerts</h3>
+                                <button class="btn-small" style="background:rgba(255,255,255,0.05); color:#ffffff; border: 1px solid var(--border-color);" id="btnClearAlerts">Clear History</button>
+                            </div>
+                            
+                            <div class="alerts-history" id="alertsHistoryList">
+                                <!-- Triggered alerts show up here -->
+                                <div style="text-align: center; padding: 40px; color: var(--text-muted);" id="emptyAlertsMsg">
+                                    <i class="fa-solid fa-bell-slash" style="font-size:32px; margin-bottom:12px;"></i>
+                                    <p>No alerts triggered. Use the simulation panel on the right to trigger mock events!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right panel for simulation -->
+                        <div class="glass-panel simulator-tools-card">
+                            <h3 class="section-title"><i class="fa-solid fa-wand-magic-sparkles"></i>Alerts & Market Simulator</h3>
+                            <p style="font-size:12.5px; color:var(--text-secondary); margin-top:8px; line-height:1.5;">
+                                Since stock market indicators change in real-time, click any trigger below to simulate market events and test the alert and notification response system.
+                            </p>
+                            
+                            <div class="sim-btn-list">
+                                <button class="btn-sim-trigger" data-sim="breakout">
+                                    <span>Simulate Resistance Breakout</span>
+                                    <i class="fa-solid fa-bolt" style="color:var(--accent-blue);"></i>
+                                </button>
+                                <button class="btn-sim-trigger" data-sim="top5">
+                                    <span>Simulate New Entry to Top 5</span>
+                                    <i class="fa-solid fa-trophy" style="color:var(--accent-purple);"></i>
+                                </button>
+                                <button class="btn-sim-trigger" data-sim="target">
+                                    <span>Simulate Target 1 Achieved</span>
+                                    <i class="fa-solid fa-circle-check" style="color:var(--accent-green);"></i>
+                                </button>
+                                <button class="btn-sim-trigger" data-sim="stoploss">
+                                    <span>Simulate Stop Loss Hit</span>
+                                    <i class="fa-solid fa-circle-xmark" style="color:var(--accent-red);"></i>
+                                </button>
+                                <button class="btn-sim-trigger" data-sim="volspike">
+                                    <span>Simulate Institutional Buying (Volume)</span>
+                                    <i class="fa-solid fa-arrow-trend-up" style="color:var(--accent-orange);"></i>
+                                </button>
+                                <button class="btn-sim-trigger" data-sim="rsi">
+                                    <span>Simulate RSI Threshold Cross</span>
+                                    <i class="fa-solid fa-wave-square" style="color:var(--accent-purple);"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        
+    </div>
+
+    <!-- Exit button when mobile simulator frame is active -->
+    <button class="exit-simulator-trigger" id="exitSimulator">
+        <i class="fa-solid fa-arrow-left"></i>
+        Exit Mobile Simulator Mode
+    </button>
+
+    <!-- FLOATING MODAL: RECORD SWING POSITION -->
+    <div class="floating-modal-backdrop" id="addPositionModal">
+        <div class="floating-modal glass-panel">
+            <div class="modal-header">
+                <h3 class="section-title"><i class="fa-solid fa-briefcase"></i>Record Swing Entry</h3>
+                <i class="fa-solid fa-xmark modal-close" id="btnCloseAddPosition"></i>
+            </div>
+            
+            <form id="addPositionForm">
+                <div class="form-group">
+                    <label for="posStockSelect">Select Stock</label>
+                    <select class="form-control" id="posStockSelect" required>
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="posQty">Quantity</label>
+                    <input type="number" class="form-control" id="posQty" min="1" value="50" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="posEntryPrice">Entry Price (Defaults to current)</label>
+                    <input type="number" step="0.01" class="form-control" id="posEntryPrice" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="posTarget">Target Price</label>
+                    <input type="number" step="0.01" class="form-control" id="posTarget" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="posStopLoss">Stop Loss Price</label>
+                    <input type="number" step="0.01" class="form-control" id="posStopLoss" required>
+                </div>
+
+                <button type="submit" class="btn-primary" style="margin-top: 10px;">Record Position</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast alerts notification container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Code scripts imports -->
+    <script src="data.js"></script>
+    <script src="chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
